@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NeuralEdu — Privacy-First Adaptive Learning</title>
+<link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<canvas id="bgCanvas" class="bg-canvas"></canvas>
+<div class="bg-mesh"></div>
+
+<!-- ═══ LOADING ═══ -->
+<div id="loadingScreen" class="screen active">
+  <div class="loader-core">
+    <div class="loader-hex">◈</div>
+    <div class="loader-name">NeuralEdu</div>
+    <div class="loader-track"><div class="loader-progress" id="loaderProgress"></div></div>
+    <div class="loader-msg" id="loaderMsg">Initializing secure database…</div>
+  </div>
+</div>
+
+<!-- ═══ AUTH ═══ -->
+<div id="authScreen" class="screen hidden">
+  <div class="auth-wrap">
+    <div class="auth-brand">
+      <div class="auth-hex">◈</div>
+      <h1>NeuralEdu</h1>
+      <p>Privacy-First Adaptive Learning System</p>
+      <div class="auth-db-badge">🔒 IndexedDB Encrypted · Zero Server Calls</div>
+    </div>
+    <div class="auth-box">
+      <div class="auth-roles">
+        <button class="arole active" data-role="student">Student</button>
+        <button class="arole" data-role="teacher">Teacher</button>
+      </div>
+      <!-- Student -->
+      <div id="studentAuthWrap" class="auth-form-section">
+        <div class="auth-subtabs">
+          <button class="asub active" data-mode="login">Sign In</button>
+          <button class="asub" data-mode="register">Register</button>
+        </div>
+        <form id="sAuthForm">
+          <div class="fgroup"><label>Username</label><input type="text" id="sUser" placeholder="your username" autocomplete="off"/></div>
+          <div class="fgroup"><label>Password</label><input type="password" id="sPass" placeholder="••••••••"/></div>
+          <div class="ferr" id="sErr"></div>
+          <button type="submit" class="btn-primary" id="sAuthBtn">Sign In</button>
+        </form>
+      </div>
+      <!-- Teacher -->
+      <div id="teacherAuthWrap" class="auth-form-section hidden">
+        <div class="teacher-restricted">🔐 Restricted Teacher Access</div>
+        <form id="tAuthForm">
+          <div class="fgroup"><label>Teacher ID</label><input type="text" id="tUser" placeholder="teacher1" autocomplete="off"/></div>
+          <div class="fgroup"><label>Passphrase</label><input type="password" id="tPass" placeholder="••••••••"/></div>
+          <div class="ferr" id="tErr"></div>
+          <button type="submit" class="btn-primary">Access Dashboard</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ EXIT WARNING (20-second countdown) ═══ -->
+<div id="exitModal" class="exit-overlay hidden">
+  <div class="exit-box">
+    <div class="exit-warn-glyph">⚠</div>
+    <h2 class="exit-title">Fullscreen Exit Detected</h2>
+    <p class="exit-desc">Your session is being monitored. Exiting fullscreen will be logged and your teacher will be notified. You may stay to continue your session.</p>
+    <div class="exit-ring-wrap">
+      <svg class="exit-ring-svg" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="8"/>
+        <circle id="exitRing" cx="60" cy="60" r="50" fill="none" stroke="#ff3b3b" stroke-width="8"
+                stroke-dasharray="314.16" stroke-dashoffset="0" stroke-linecap="round"
+                transform="rotate(-90 60 60)"/>
+      </svg>
+      <div class="exit-num" id="exitNum">20</div>
+    </div>
+    <div class="exit-sub-text">Exiting in <strong id="exitSub">20</strong> seconds…</div>
+    <div class="exit-btns">
+      <button class="btn-stay" id="btnStay">↩ Stay in Session</button>
+      <button class="btn-exit-force" id="btnExitNow">Exit Now →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ STUDENT SCREEN ═══ -->
+<div id="studentScreen" class="screen hidden">
+  <header class="s-hdr">
+    <div class="s-hdr-l">
+      <span class="hdr-logo">◈ NeuralEdu</span>
+      <span class="chip chip-session">● Session Active</span>
+    </div>
+    <div class="s-hdr-c">
+      <div class="ai-chip hidden" id="aiChip">🤖 AI in <span id="aiChipTime">2:00</span></div>
+    </div>
+    <div class="s-hdr-r">
+      <div class="chip" id="fsChip" style="cursor:pointer">⛶ Loading…</div>
+      <div class="chip chip-user" id="sNameChip"></div>
+      <button class="btn-hdr-exit" id="sBtnLogout" title="Exit session">⏻</button>
+    </div>
+  </header>
+
+  <div class="s-layout">
+    <main class="s-main-col">
+
+      <!-- Document -->
+      <div class="glass doc-panel">
+        <div class="panel-hdr">
+          <span class="panel-title">📄 Learning Material</span>
+          <span class="badge-ai hidden" id="aiActiveBadge">🤖 AI Active</span>
+        </div>
+        <div id="sDocArea" class="doc-text-area">
+          <div class="empty-state"><div class="es-icon">📭</div><p>No document uploaded yet</p><small>Waiting for teacher to upload content…</small></div>
+        </div>
+      </div>
+
+      <!-- Video (if teacher uploaded) -->
+      <div class="glass hidden" id="sVideoDock">
+        <div class="panel-title">🎬 Lesson Video</div>
+        <video id="sLessonVid" controls class="lesson-vid" preload="metadata"></video>
+      </div>
+
+      <!-- Soft AI -->
+      <div class="glass ai-panel hidden" id="sAiPanel">
+        <div class="panel-hdr">
+          <span class="panel-title">🤖 Soft AI Engine</span>
+          <span class="ai-live-badge">● LIVE</span>
+        </div>
+        <div class="ai-tabs">
+          <button class="aitab active" data-aitab="summary">📌 Summary</button>
+          <button class="aitab" data-aitab="quiz">🎮 Quiz</button>
+          <button class="aitab" data-aitab="progress">📈 Progress</button>
+        </div>
+        <div class="ai-pane active" id="aipane-summary">
+          <p class="ai-hint-txt">Tap each point to expand full detail</p>
+          <div id="bulletContainer"></div>
+        </div>
+        <div class="ai-pane hidden" id="aipane-quiz">
+          <div id="quizContainer"></div>
+          <div class="quiz-score-box hidden" id="quizScoreBox"></div>
+        </div>
+        <div class="ai-pane hidden" id="aipane-progress">
+          <div class="prog-row">
+            <div class="pstat"><span class="pstat-v" id="pPoints">0</span><span class="pstat-l">Points</span></div>
+            <div class="pstat"><span class="pstat-v" id="pCorrect">0</span><span class="pstat-l">Correct</span></div>
+            <div class="pstat"><span class="pstat-v" id="pLevel">1</span><span class="pstat-l">Level</span></div>
+          </div>
+          <div class="xp-track"><div class="xp-fill" id="xpFill"></div></div>
+          <div class="xp-txt" id="xpTxt">0 / 200 XP</div>
+          <div class="badge-row" id="badgeRow"></div>
+        </div>
+      </div>
+    </main>
+
+    <aside class="s-side-col">
+      <!-- Focus -->
+      <div class="glass focus-panel">
+        <div class="panel-title">🎯 Focus Level</div>
+        <div class="focus-list">
+          <label class="fopt" data-v="High"><input type="radio" name="focusSel" value="High"/>
+            <div class="fopt-body"><span class="fopt-icon">🔥</span><span>High Focus</span><span class="fopt-pts">+100</span></div>
+          </label>
+          <label class="fopt" data-v="Medium"><input type="radio" name="focusSel" value="Medium"/>
+            <div class="fopt-body"><span class="fopt-icon">⚡</span><span>Medium Focus</span><span class="fopt-pts">+50</span></div>
+          </label>
+          <label class="fopt" data-v="Low"><input type="radio" name="focusSel" value="Low"/>
+            <div class="fopt-body"><span class="fopt-icon">🌿</span><span>Low Focus</span><span class="fopt-pts">+10</span></div>
+          </label>
+        </div>
+        <div class="ai-unlock hidden" id="aiUnlockWrap">
+          <button class="btn-ai" id="btnActivateAi">⚡ Activate Soft AI</button>
+          <small>Timer complete — tap to begin!</small>
+        </div>
+      </div>
+
+      <!-- Score -->
+      <div class="glass score-panel">
+        <div class="panel-title">🏆 Score</div>
+        <div class="score-big" id="scoreBig">0</div>
+        <div class="score-track"><div class="score-fill" id="scoreFill"></div></div>
+        <div class="mini-badge-row" id="miniBadgeRow"></div>
+      </div>
+
+      <!-- Camera -->
+      <div class="glass cam-panel">
+        <div class="panel-title">📹 My Camera</div>
+        <div class="cam-preview" id="sCamPreview">
+          <video id="sCamVid" autoplay muted playsinline class="hidden"></video>
+          <div class="cam-off" id="sCamOff"><span style="font-size:24px">📷</span><small>Camera off</small></div>
+        </div>
+        <button class="btn-cam" id="btnCamToggle">Start Camera</button>
+      </div>
+    </aside>
+  </div>
+
+  <!-- PiP float -->
+  <div class="pip-container hidden" id="pipContainer">
+    <video id="pipVid" autoplay muted playsinline></video>
+    <div class="pip-info" id="pipInfo">📹 Live</div>
+    <button class="pip-x" id="pipClose">✕</button>
+  </div>
+</div>
+
+<!-- ═══ TEACHER SCREEN ═══ -->
+<div id="teacherScreen" class="screen hidden">
+  <header class="t-hdr">
+    <div class="t-hdr-l">
+      <span class="hdr-logo">◈ NeuralEdu</span>
+      <span class="chip chip-teacher">Teacher</span>
+    </div>
+    <div class="t-hdr-r">
+      <span class="live-sync-dot">● Live Sync</span>
+      <button class="btn-hdr-exit" id="tBtnLogout">⏻ Sign Out</button>
+    </div>
+  </header>
+
+  <div class="t-layout">
+    <nav class="t-sidenav">
+      <button class="tnav active" data-ttab="dashboard"><span>📊</span><span>Dashboard</span></button>
+      <button class="tnav" data-ttab="upload"><span>📂</span><span>Upload</span></button>
+      <button class="tnav" data-ttab="analytics"><span>🎯</span><span>Analytics</span></button>
+      <button class="tnav" data-ttab="video"><span>📹</span><span>Video</span></button>
+      <button class="tnav" data-ttab="timeline"><span>📈</span><span>Timeline</span></button>
+    </nav>
+
+    <main class="t-content">
+
+      <!-- Dashboard -->
+      <div class="t-tab active" id="ttab-dashboard">
+        <div class="ttl">Live Dashboard</div>
+        <div class="kpi-row">
+          <div class="kpi"><div class="kpi-ic">👥</div><div class="kpi-v" id="kStudents">0</div><div class="kpi-l">Students</div></div>
+          <div class="kpi"><div class="kpi-ic">📊</div><div class="kpi-v" id="kAvg">—</div><div class="kpi-l">Avg Score</div></div>
+          <div class="kpi kpi-green"><div class="kpi-ic">⛶</div><div class="kpi-v" id="kFs">—</div><div class="kpi-l">In Fullscreen</div></div>
+          <div class="kpi kpi-red"><div class="kpi-ic">🚨</div><div class="kpi-v" id="kExits">0</div><div class="kpi-l">FS Exits</div></div>
+        </div>
+        <div class="two-charts">
+          <div class="glass chart-card"><div class="chart-lbl">Focus Distribution</div><canvas id="cPie" width="220" height="220"></canvas><div id="pieLeg" class="clegend"></div></div>
+          <div class="glass chart-card"><div class="chart-lbl">Engagement Levels</div><canvas id="cBar" width="320" height="220"></canvas></div>
+        </div>
+        <div class="glass mt16">
+          <div class="panel-hdr"><span class="panel-title">⛶ Fullscreen Monitor</span><span class="refresh-lbl">⟳ 3s</span></div>
+          <div class="tscroll">
+            <table class="dtbl" id="fsTbl"><thead><tr><th>Student</th><th>Focus</th><th>Fullscreen</th><th>Last Exit</th><th>Exits</th><th>Score</th></tr></thead><tbody id="fsTblBody"></tbody></table>
+            <div class="empty-state small hidden" id="fsTblEmpty">No students online</div>
+          </div>
+        </div>
+        <div class="glass mt16">
+          <div class="panel-hdr"><span class="panel-title">📹 Live Feeds</span><span class="cam-badge" id="camBadge">0 cams</span></div>
+          <div class="vid-grid" id="tVidGrid"><div class="empty-state small">No cameras active</div></div>
+        </div>
+      </div>
+
+      <!-- Upload -->
+      <div class="t-tab hidden" id="ttab-upload">
+        <div class="ttl">Upload Materials</div>
+        <div class="upload-cards">
+          <div class="glass upload-card">
+            <div class="uc-ic">📄</div><div class="uc-ttl">Text Document</div>
+            <div class="uc-hint">.txt · max 5KB · student-visible</div>
+            <label class="btn-upload">Select File<input type="file" id="docInput" accept=".txt" hidden/></label>
+            <div class="upload-fb" id="docFb"></div>
+          </div>
+          <div class="glass upload-card">
+            <div class="uc-ic">🎬</div><div class="uc-ttl">Lesson Video</div>
+            <div class="uc-hint">.mp4 · max 10MB · admin-controlled</div>
+            <label class="btn-upload">Select File<input type="file" id="vidInput" accept=".mp4" hidden/></label>
+            <div class="upload-fb" id="vidFb"></div>
+          </div>
+          <div class="glass upload-card">
+            <div class="uc-ic">📡</div><div class="uc-ttl">WebRTC Settings</div>
+            <div class="uc-hint">Control live camera access</div>
+            <div class="tog-rows">
+              <div class="tog-row"><span>Student Feeds</span><label class="tog"><input type="checkbox" id="togFeeds"/><span class="tog-sl"></span></label></div>
+              <div class="tog-row"><span>Allow Recording</span><label class="tog"><input type="checkbox" id="togRec"/><span class="tog-sl"></span></label></div>
+            </div>
+            <div class="upload-fb" id="webrtcFb"></div>
+          </div>
+        </div>
+        <div class="glass mt16">
+          <div class="panel-hdr"><span class="panel-title">🗄 Media Library</span><span class="admin-badge">🔒 Admin Only</span></div>
+          <div id="mediaLib" class="media-list"><div class="empty-state small">No files uploaded</div></div>
+        </div>
+      </div>
+
+      <!-- Analytics -->
+      <div class="t-tab hidden" id="ttab-analytics">
+        <div class="ttl">Soft AI Analytics</div>
+        <div class="two-charts">
+          <div class="glass chart-card"><div class="chart-lbl">Focus Breakdown</div><canvas id="cDonut" width="220" height="220"></canvas><div id="donutLeg" class="clegend"></div></div>
+          <div class="glass fs-events-card">
+            <div class="panel-title">FS Exit Events</div>
+            <div id="fsExitFeed" class="event-feed"><div class="empty-state small">No exits logged</div></div>
+          </div>
+        </div>
+        <div class="glass lf-banner mt16">
+          <div class="lf-big" id="lfBig">0%</div>
+          <div><div class="lf-t">Low Focus Students</div><div class="lf-s">of all active sessions</div></div>
+        </div>
+        <div class="glass mt16">
+          <div class="panel-hdr"><div class="panel-title">Session Table</div><span class="admin-badge">🔒 DB Encrypted</span></div>
+          <div class="tscroll">
+            <table class="dtbl" id="analyticsTbl"><thead><tr><th>Student</th><th>Focus</th><th>Fullscreen</th><th>Duration</th><th>Score</th><th>AI Used</th><th>Exits</th></tr></thead><tbody id="analyticsTblBody"></tbody></table>
+            <div class="empty-state small" id="analyticsEmpty">No sessions yet</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Video Controls -->
+      <div class="t-tab hidden" id="ttab-video">
+        <div class="ttl">Video Controls</div>
+        <div class="vc-grid">
+          <div class="glass vc-panel">
+            <div class="panel-title">Teacher Camera</div>
+            <div class="teacher-cam-box">
+              <video id="tCamVid" autoplay muted playsinline class="hidden"></video>
+              <div class="cam-off" id="tCamOff"><span style="font-size:28px">📷</span><small>Camera Off</small></div>
+            </div>
+            <div class="vc-btn-row">
+              <button class="btn-sm" id="btnTCamStart">▶ Start</button>
+              <button class="btn-sm-red" id="btnTCamStop">■ Stop</button>
+            </div>
+          </div>
+          <div class="glass vc-panel">
+            <div class="panel-title">Global Controls</div>
+            <div class="gc-list">
+              <div class="gc-row"><span>Student Feeds</span><label class="tog"><input type="checkbox" id="togFeeds2"/><span class="tog-sl"></span></label></div>
+              <div class="gc-row"><span>Mute All</span><button class="btn-sm" id="btnMuteAll">🔇 Mute</button></div>
+              <div class="gc-row"><span>Quality</span><select class="mini-sel" id="selQuality"><option>360p</option><option selected>720p</option><option>1080p</option></select></div>
+            </div>
+          </div>
+          <div class="glass vc-panel">
+            <div class="panel-hdr"><span class="panel-title">Recordings</span><span class="admin-badge">🔒 Admin</span></div>
+            <div id="recList" class="rec-list"><div class="empty-state small">No recordings</div></div>
+            <button class="btn-sm mt8" id="btnSaveSnap">💾 Snapshot</button>
+          </div>
+        </div>
+        <div class="glass mt16">
+          <div class="panel-hdr"><span class="panel-title">Student Camera Grid</span><span class="cam-badge" id="camBadge2">0 online</span></div>
+          <div class="vid-grid large" id="tVidGrid2"><div class="empty-state small">No cameras active</div></div>
+        </div>
+      </div>
+
+      <!-- Timeline -->
+      <div class="t-tab hidden" id="ttab-timeline">
+        <div class="ttl">Session Timeline</div>
+        <div class="glass full-chart">
+          <div class="chart-lbl">Focus Trend + Fullscreen Events</div>
+          <canvas id="cLine" width="720" height="280"></canvas>
+        </div>
+        <div class="glass mt16 event-log-card">
+          <div class="panel-hdr"><span class="panel-title">Full Event Log</span><span class="admin-badge">🔒 DB Only</span></div>
+          <div id="eventLogFeed" class="event-feed"><div class="empty-state small">No events yet</div></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
