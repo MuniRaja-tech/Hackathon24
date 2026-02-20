@@ -97,16 +97,16 @@ Frequent exits trigger supportive adaptations like summaries.
 
 We DO NOT collect:
 
-❌ camera data
-❌ facial recognition
-❌ behavior tracking
-❌ personal identity data
+ camera data
+ facial recognition
+ behavior tracking
+ personal identity data
 
 We ONLY use:
 
-✅ voluntary focus check-ins
-✅ session-based signals
-✅ anonymized class analytics
+ voluntary focus check-ins
+ session-based signals
+ anonymized class analytics
 
 
 ---
@@ -176,9 +176,9 @@ MIT License
 
 If you want, I can also:
 
-✅ make an ultra-short version (5 lines)
-✅ write a GitHub repo description (1 sentence)
-✅ create a LinkedIn post
-✅ suggest project folder structure
+make an ultra-short version (5 lines)
+write a GitHub repo description (1 sentence)
+create a LinkedIn post
+suggest project folder structure
 
 Just tell me 
