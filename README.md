@@ -1,16 +1,3 @@
-Here is a short, clean, GitHub-ready README that still looks professional and complete 
-
-
-
-
- Privacy-First Adaptive Learning System
-
- Engagement Without Surveillance
-
-A lightweight web app that improves student focus using voluntary attention check-ins and adaptive content delivery, while preserving complete privacy.
-
-
----
 
  Problem
 
